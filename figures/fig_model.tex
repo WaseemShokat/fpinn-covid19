@@ -1,0 +1,50 @@
+\documentclass[border=6pt]{standalone}
+\usepackage{amsmath,amssymb}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\begin{document}
+\begin{tikzpicture}[
+  font=\small, >={Stealth[length=2mm]},
+  c/.style={draw, rounded corners=2pt, minimum width=10mm, minimum height=9mm, line width=0.7pt, font=\normalsize},
+  s/.style={c, fill=blue!10}, e/.style={c, fill=orange!18}, i/.style={c, fill=red!15},
+  r/.style={c, fill=green!15}, v/.style={c, fill=violet!12},
+  a/.style={->, line width=0.7pt},
+  l/.style={font=\footnotesize, fill=white, inner sep=1.2pt}
+]
+\node[s] (S) at (0,0)    {$S_p$};
+\node[s] (Q) at (0,2.6)  {$Q_p$};
+\node[v] (V) at (0,-2.6) {$V_p$};
+\node[e] (E) at (3.6,0)  {$E_p$};
+\node[i] (A) at (6.8,1.5) {$A_p$};
+\node[i] (I) at (6.8,-1.5){$I_p$};
+\node[i] (D) at (10.0,0)  {$D_p$};
+\node[r] (R) at (13.2,0)  {$R_p$};
+
+% recruitment
+\draw[a] (-2.0,0) -- node[l, above] {$\Lambda$} (S);
+% quarantine
+\draw[a] ([xshift=-2.5mm]S.north) -- node[l, left] {$\kappa$} ([xshift=-2.5mm]Q.south);
+\draw[a] ([xshift=2.5mm]Q.south) -- node[l, right] {$\gamma$} ([xshift=2.5mm]S.south |- S.north);
+% vaccination
+\draw[a] (S) -- node[l, left] {$\beta(\tau)$} (V);
+% infection
+\draw[a] (S) -- node[l, above] {$\lambda(\tau)$} (E);
+\draw[a] (V) -- node[l, below right] {$\sigma\lambda(\tau)$} (E);
+% progression
+\draw[a] (E) -- node[l, above left] {$\psi(1-\eta)$} (A);
+\draw[a] (E) -- node[l, below left] {$\psi\eta$} (I);
+% diagnosis
+\draw[a] (A) -- node[l, above right] {$\mu_A$} (D);
+\draw[a] (I) -- node[l, below right] {$\mu_I$} (D);
+% recovery
+\draw[a] (A) to[out=25, in=125] node[l, above] {$\varphi_A$} (R);
+\draw[a] (I) to[out=-25, in=-125] node[l, below] {$\varphi_I$} (R);
+\draw[a] (D) -- node[l, above] {$\varphi_D$} (R);
+% disease deaths
+\draw[a] (I.south) -- node[l, right] {$\rho_I$} ++(0,-1.1);
+\draw[a] (D.south) -- node[l, right] {$\rho_D$} ++(0,-1.1);
+% legend for force of infection
+\node[font=\footnotesize, align=left, anchor=west] at (2.2,-3.3)
+  {$\lambda(\tau)=\alpha(\tau)\,(I_p+\delta A_p)$};
+\end{tikzpicture}
+\end{document}
