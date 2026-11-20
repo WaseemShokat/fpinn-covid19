@@ -87,10 +87,10 @@ class ConstAlphaFPINN(F.FPINN):
         return nn.functional.softplus(self.c) * torch.ones_like(tau_hat)
 
 
-# Prior on the initial state: by 1 Dec 2020 about 1.6 % of the population had
-# been reported as cases; allowing for under-reporting, we require the
-# non-infected classes S+Q at tau=0 to lie in [0.85, 0.98], and V(0)=0
-# (vaccination started on 14 Jan 2021).
+# Prior on the initial state (same interval as for Turkiye): by 1 Jan 2021 about
+# 0.2 % of the population had been reported as cases; allowing for under-reporting,
+# we require the non-infected classes S+Q at tau=0 to lie in [0.85, 0.98], and
+# V(0)=0 (vaccination in Pakistan started in February 2021).
 SQ0_RANGE = (0.85, 0.98)
 LAM_INIT = 100.0
 
