@@ -46,3 +46,21 @@ python fpinn_pakistan.py --data data --out results_pk
 
 Each run writes tables (`.tex`), figures (`.pdf`), a `summary*.txt` with all numbers used
 in the paper, and a `settings*.json` file with the settings.
+
+## Non-negative observation model and identifiability (Section 6.5)
+
+By default the daily cases and deaths are differences of the fractional integrals C and M
+(the main model of the paper). To use the non-negative flow model of Section 6.5, in which
+the daily cases are the flow into the diagnosed class, set the environment variable
+`FPINN_OBS=flow`:
+
+```
+FPINN_OBS=flow python fpinn_synthetic.py --out results_flow
+FPINN_OBS=flow python fpinn_turkey.py   --data data --out results_tr_flow
+FPINN_OBS=flow python fpinn_pakistan.py --data data --out results_pk_flow
+FPINN_OBS=flow python profile_z.py      --out results_profile   # profile of the data loss in z (Figure 9)
+```
+
+`profile_z.py` trains networks with the memory order fixed at 0.6, 0.7, 0.8, 0.9 and 1, and
+with learned order, on the synthetic data with true order 0.8 and 0.9, and saves all results
+to `profile_rows.json`.

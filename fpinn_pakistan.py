@@ -113,8 +113,7 @@ def train_fpinn_init(data, cov, seed, use_cov=True, learn_z=True, z_fixed=None,
     for it in range(n1 + n2 + n3):
         lp = 0.0 if it < n1 else (lam_phys * min(1.0, (it - n1) / max(n2, 1)))
         q = F.forward_quantities(model, days, cov)
-        yhat = model.varpi() * F.N_POP * (q["C"][1:] - q["C"][:-1])
-        dhat = F.N_POP * (q["M"][1:] - q["M"][:-1])
+        yhat, dhat = F.obs_torch(q, model.varpi(), F.N_POP)
         L_data = ((torch.log1p(torch.clamp(yhat, min=0)) - torch.log1p(y)) ** 2
                   + w_d * (torch.log1p(torch.clamp(dhat, min=0)) - torch.log1p(d)) ** 2).mean()
         L_phys = (q["resid"] ** 2).mean()
@@ -126,7 +125,7 @@ def train_fpinn_init(data, cov, seed, use_cov=True, learn_z=True, z_fixed=None,
         opt.zero_grad(); loss.backward(); opt.step(); sched.step()
     with torch.no_grad():
         q = F.forward_quantities(model, days, cov)
-        yhat = model.varpi() * F.N_POP * (q["C"][1:] - q["C"][:-1])
+        yhat, _ = F.obs_torch(q, model.varpi(), F.N_POP)
     return model, dict(z=float(q["z"].detach()), varpi=float(model.varpi().detach()),
                        alpha=q["a"].numpy(), X=q["X"].numpy(), C=q["C"].numpy(),
                        M=q["M"].numpy(), yhat=yhat.numpy(), L_data=float(L_data))
