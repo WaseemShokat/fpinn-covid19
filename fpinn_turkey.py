@@ -90,7 +90,8 @@ class ConstAlphaFPINN(F.FPINN):
         return nn.functional.softplus(self.c) * torch.ones_like(tau_hat)
 
 
-# Prior on the initial state: by 1 Dec 2020 about 1.6 % of the population had
+# Prior on the initial state: by 1 Dec 2020 about 1.7 % of the population (including
+# the cases added in the revision of 10 Dec 2020) had
 # been reported as cases; allowing for under-reporting, we require the
 # non-infected classes S+Q at tau=0 to lie in [0.85, 0.98], and V(0)=0
 # (vaccination started on 14 Jan 2021).
