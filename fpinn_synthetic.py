@@ -203,6 +203,17 @@ def initial_state():
     return X0
 
 
+OBS = os.environ.get("FPINN_OBS", "integral")   # "integral": differences of C and M (main model, eq. 24); "flow": diagnosis/death flows (non-negative, Section 6.5)
+                                            # "integral": differences of the fractional integrals C, M (old)
+
+
+def obs_flows_np(X, z):
+    """Diagnosis and death flows mu_A^z A + mu_I^z I and rho_I^z I + rho_D^z D (per day)."""
+    P = {k: v ** z for k, v in PARAMS.items()}
+    return (P["mu_A"] * X[:, 3] + P["mu_I"] * X[:, 4],
+            P["rho_I"] * X[:, 4] + P["rho_D"] * X[:, 5])
+
+
 def generate_data(z_true, dispersion, seed):
     """Returns dict with daily true/noisy cases and deaths and the daily states."""
     rng = np.random.default_rng(seed)
@@ -211,8 +222,12 @@ def generate_data(z_true, dispersion, seed):
     step = int(round(1.0 / H_SIM))
     Xd = X[::step]                                   # daily values, days 0..T
     C, M = Xd[:, 8], Xd[:, 9]
-    mean_y = VARPI_TRUE * N_POP * np.maximum(np.diff(C), 0)
-    mean_d = N_POP * np.maximum(np.diff(M), 0)
+    if OBS == "flow":
+        fy, fd = obs_flows_np(Xd[1:], z_true)
+        mean_y, mean_d = VARPI_TRUE * N_POP * fy, N_POP * fd
+    else:
+        mean_y = VARPI_TRUE * N_POP * np.maximum(np.diff(C), 0)
+        mean_d = N_POP * np.maximum(np.diff(M), 0)
 
     def nb(mean):
         mean = np.maximum(mean, 1e-8)
@@ -317,7 +332,14 @@ def forward_quantities(model, days, cov, h=H_PINN):
     W = rl_matrix(N, z) * (h ** z / torch.exp(torch.lgamma(z + 1)))
     C = torch.cat([torch.zeros(1), W @ inflow_C[:-1]])
     M = torch.cat([torch.zeros(1), W @ inflow_M[:-1]])
-    return dict(X=X, a=a, z=z, resid=resid, C=C, M=M)
+    return dict(X=X, a=a, z=z, resid=resid, C=C, M=M, fC=inflow_C, fM=inflow_M)
+
+
+def obs_torch(q, varpi, npop):
+    """Predicted daily cases and deaths on days 1..N."""
+    if OBS == "flow":
+        return varpi * npop * q["fC"][1:], npop * q["fM"][1:]
+    return varpi * npop * (q["C"][1:] - q["C"][:-1]), npop * (q["M"][1:] - q["M"][:-1])
 
 
 def train_fpinn(data, cov, seed, use_cov=True, learn_z=True, z_fixed=None,
@@ -338,8 +360,7 @@ def train_fpinn(data, cov, seed, use_cov=True, learn_z=True, z_fixed=None,
     for it in range(n1 + n2 + n3):
         lp = 0.0 if it < n1 else (lam_phys * min(1.0, (it - n1) / max(n2, 1)))
         q = forward_quantities(model, days, cov)
-        yhat = model.varpi() * N_POP * (q["C"][1:] - q["C"][:-1])
-        dhat = N_POP * (q["M"][1:] - q["M"][:-1])
+        yhat, dhat = obs_torch(q, model.varpi(), N_POP)
         L_data = ((torch.log1p(torch.clamp(yhat, min=0)) - torch.log1p(y)) ** 2
                   + w_d * (torch.log1p(torch.clamp(dhat, min=0)) - torch.log1p(d)) ** 2).mean()
         L_phys = (q["resid"] ** 2).mean()
@@ -352,7 +373,7 @@ def train_fpinn(data, cov, seed, use_cov=True, learn_z=True, z_fixed=None,
                   f"phys {L_phys.item():.3e}  z {q['z'].item():.3f}")
     with torch.no_grad():
         q = forward_quantities(model, days, cov)
-        yhat = model.varpi() * N_POP * (q["C"][1:] - q["C"][:-1])
+        yhat, _ = obs_torch(q, model.varpi(), N_POP)
     return model, dict(z=float(q["z"].detach()), varpi=float(model.varpi().detach()),
                        alpha=q["a"].numpy(), X=q["X"].numpy(), C=q["C"].numpy(),
                        M=q["M"].numpy(), yhat=yhat.numpy(), L_data=float(L_data))
@@ -372,8 +393,10 @@ def forecast(model, res, data, cov_full):
 
     t, Xf = solve_l1(z, H_PINN, T_TOTAL, a_learned, history=hist,
                      t0=float(data["days_train"][-1]))
-    C = Xf[:, 8]
-    yf = res["varpi"] * N_POP * np.diff(C)
+    if OBS == "flow":
+        yf = res["varpi"] * N_POP * obs_flows_np(Xf[1:], z)[0]
+    else:
+        yf = res["varpi"] * N_POP * np.diff(Xf[:, 8])
     return yf[T_TRAIN:]                              # forecasts for days T_TRAIN+1..T_TOTAL
 
 
