@@ -48,7 +48,5 @@ for zt in (0.8, 0.9):
     for k in range(a.K_learn):
         model, res = F.train_fpinn(data, cov, seed=1000 + k, iters=iters)
         record("learned", zt, None, k, model, res, data)
-    json.dump(rows, open(os.path.join(a.out, "profile_rows.json"), "w"), indent=1)
-
-json.dump(rows, open(os.path.join(a.out, "profile_rows.json"), "w"), indent=1)
+    json.dump(rows, open(os.path.join(a.out, "profile_rows.json"), "w"), indent=1)   # save after each true order
 print("done")

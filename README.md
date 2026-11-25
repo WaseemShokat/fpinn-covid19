@@ -1,7 +1,20 @@
 # Fractional PINNs with time-varying transmission for COVID-19
 
-Code for the paper "Fractional Physics-Informed Neural Networks with Time-Varying
-Transmission for Modelling and Forecasting COVID-19 Dynamics" (W. Shokat).
+Code for the paper
+
+> W. Shokat, "Fractional Physics-Informed Neural Networks with Time-Varying Transmission for
+> Modelling and Scenario Forecasting of COVID-19 Dynamics", submitted to *Chaos, Solitons & Fractals* (2026).
+
+**What it does.** A fractional (Caputo) compartmental COVID-19 model is combined with a
+physics-informed neural network. The network learns the memory order *z*, a time-varying
+transmission rate α(t) (from time, mobility and policy stringency) and the reporting fraction
+from daily cases and deaths. The L1 scheme for the Caputo derivative is built into the loss.
+
+**Main findings.**
+- Synthetic experiments with a known memory order and transmission rate test what the method can recover.
+- The memory order *z* is only weakly identifiable: the data loss is almost flat in *z*,
+  while forecasts depend strongly on it (see `profile_z.py`).
+- Real-data applications: Türkiye (Dec 2020 – Jun 2021) and Pakistan (Jan – Jul 2021).
 
 ## Files
 
@@ -15,10 +28,10 @@ Transmission for Modelling and Forecasting COVID-19 Dynamics" (W. Shokat).
 
 ## Requirements
 
-Python 3.10+ with `torch`, `numpy`, `pandas`, `matplotlib`:
+Python 3.10+:
 
 ```
-pip install torch numpy pandas matplotlib
+pip install -r requirements.txt
 ```
 
 ## Data (all public)
@@ -64,3 +77,11 @@ FPINN_OBS=flow python profile_z.py      --out results_profile   # profile of the
 `profile_z.py` trains networks with the memory order fixed at 0.6, 0.7, 0.8, 0.9 and 1, and
 with learned order, on the synthetic data with true order 0.8 and 0.9, and saves all results
 to `profile_rows.json`.
+
+## Citation
+
+If you use this code, please cite the paper above (see also `CITATION.cff`).
+
+## Contact
+
+Waseem Shokat – waseemshokat91@gmail.com – ORCID [0009-0007-0398-0146](https://orcid.org/0009-0007-0398-0146)

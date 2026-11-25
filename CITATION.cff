@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite it as below."
+title: "Fractional Physics-Informed Neural Networks with Time-Varying Transmission for Modelling and Scenario Forecasting of COVID-19 Dynamics – code"
+authors:
+  - family-names: Shokat
+    given-names: Waseem
+    orcid: "https://orcid.org/0009-0007-0398-0146"
+license: MIT
+repository-code: "https://github.com/WaseemShokat/fpinn-covid19"
+date-released: 2026-11-20
+keywords:
+  - fractional differential equations
+  - physics-informed neural networks
+  - COVID-19
+  - identifiability
